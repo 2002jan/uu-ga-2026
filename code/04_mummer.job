@@ -1,0 +1,51 @@
+#!/bin/bash -l
+#SBATCH -A uppmax2026-1-61
+#SBATCH -J mummer
+#SBATCH --output=logs/mummer%j.out
+#SBATCH --error=logs/mummer%j.err
+#SBATCH -n 1
+#SBATCH -t 15:00
+
+#Modules
+module load MUMmer/4.0.1-GCCcore-13.3.0
+module load gnuplot/6.0.1-GCCcore-13.3.0
+
+#Dir preperation
+WORKDIR=$HOME/GenomeAnalysisProject
+
+OUT_DIR=$WORKDIR/results/mummer
+mkdir -p $OUT_DIR
+
+DATA=$WORKDIR/results/asm/asm.contigs.fasta
+REFERENCE=$WORKDIR/data/reference/reference.fasta
+
+cd $SNIC_TMP
+
+mkdir data
+mkdir out
+
+cp $DATA data/
+cp $REFERENCE data/
+
+DATA=data/asm.contigs.fasta
+REFERENCE=data/reference.fasta
+
+PREFIX=out/assembly_vs_ref
+
+nucmer \
+    --prefix $PREFIX \
+    $REFERENCE \
+    $DATA
+
+delta-filter $PREFIX.delta > $PREFIX.filtered.delta
+
+cd out
+
+mummerplot \
+  assembly_vs_ref.filtered.delta \
+  --layout \
+  --filter \
+  --large \
+  --png
+
+cp -r * $OUT_DIR/

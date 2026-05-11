@@ -1,0 +1,34 @@
+#!/bin/bash -l
+#SBATCH -A uppmax2026-1-61
+#SBATCH -J quast_eval
+#SBATCH --output=logs/quast_eval%j.out
+#SBATCH --error=logs/quast_eval%j.err
+#SBATCH -n 1
+#SBATCH -t 30:00
+
+#Modules
+module load QUAST/5.3.0-gfbf-2024a
+
+#Dir preperation
+WORKDIR=$HOME/GenomeAnalysisProject
+
+OUT_DIR=$WORKDIR/results/quast
+mkdir -p $OUT_DIR
+
+DATA=$WORKDIR/results/asm/asm.contigs.fasta
+REFERENCE=$WORKDIR/data/reference/reference.fasta
+
+cd $SNIC_TMP
+
+mkdir data
+mkdir out
+
+cp $DATA data/
+cp $REFERENCE data/
+
+quast.py \
+    data/asm.contigs.fasta \
+    --output-dir out \
+    --reference data/reference.fasta
+
+cp -r out/* $OUT_DIR/

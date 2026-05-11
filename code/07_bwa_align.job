@@ -1,0 +1,167 @@
+#!/bin/bash
+#SBATCH -A uppmax2026-1-61
+#SBATCH -J bwa_rnaseq
+#SBATCH --output=logs/bwa_rnaseq_%j.out
+#SBATCH --error=logs/bwa_rnaseq_%j.err
+#SBATCH -n 1
+#SBATCH -t 3:00:00
+
+#Modules
+module load BWA/0.7.19-GCCcore-13.3.0
+module load SAMtools/1.22.1-GCC-13.3.0
+
+#Dir preperation
+WORKDIR=$HOME/GenomeAnalysisProject
+
+OUT_DIR=$WORKDIR/results/rna_seq_alignment
+mkdir -p ${OUT_DIR}/{BH,Serum}
+
+ASSEMBLY=$WORKDIR/results/asm/asm.contigs.fasta
+BH_DIR=$WORKDIR/data/raw_data/transcriptomics_data/RNA-Seq_BH/trimmed
+SERUM_DIR=$WORKDIR/data/raw_data/transcriptomics_data/RNA-Seq_Serum/trimmed
+
+cd $SNIC_TMP
+
+mkdir data
+mkdir -p out/{bwa_index,BH,Serum}
+
+INDEX_DIR=out/bwa_index
+
+#Creating index
+
+echo "Creating index..."
+
+cp ${ASSEMBLY} ${INDEX_DIR}/genome.fasta
+
+bwa index -p $INDEX_DIR/genome $INDEX_DIR/genome.fasta
+
+samtools faidx $INDEX_DIR/genome.fasta
+
+echo "Index complete: $INDEX_DIR/genome.fasta"
+
+#Alignments
+
+DATA_ROOT=$WORKDIR/data/raw_data/transcriptomics_data
+
+align_sample() {
+  local SAMPLE=$1
+  local INPUT_DIR=$2
+  local CONDITION=$3
+  local TMP_OUT=out/${CONDITION}
+
+  local R1=${INPUT_DIR}/trim_paired_${SAMPLE}_pass_1.fastq.gz
+  local R2=${INPUT_DIR}/trim_paired_${SAMPLE}_pass_2.fastq.gz
+  local S1=${INPUT_DIR}/trim_single_${SAMPLE}_pass_1.fastq.gz
+  local S2=${INPUT_DIR}/trim_single_${SAMPLE}_pass_2.fastq.gz
+
+  #Validate paired files
+  if [[ ! -f "$R1" || ! -f "$R2" ]]; then
+    echo "Missing paired files for ${CONDITION}/${SAMPLE}"
+    return 1
+  fi
+
+  echo "Aligning ${CONDITION}/${SAMPLE}..."
+
+  cp ${R1} ${TMP_OUT}/R1_${SAMPLE}.fastq.gz
+  cp ${R2} ${TMP_OUT}/R2_${SAMPLE}.fastq.gz
+  [[ -f "$S1" ]] && cp ${S1} ${TMP_OUT}/S1_${SAMPLE}.fastq.gz
+  [[ -f "$S2" ]] && cp ${S2} ${TMP_OUT}/S2_${SAMPLE}.fastq.gz
+
+  local RG="@RG\tID:${SAMPLE}\tSM:${SAMPLE}\tLB:${CONDITION}\tPL:ILLUMINA\tPU:${CONDITION}_${SAMPLE}"
+
+  #Align paired reads
+  bwa mem \
+    -M \
+    -R "${RG}" \
+    ${INDEX_DIR}/genome \
+    ${TMP_OUT}/R1_${SAMPLE}.fastq.gz \
+    ${TMP_OUT}/R2_${SAMPLE}.fastq.gz \
+  | samtools sort \
+      -T  ${TMP_OUT}/tmp_sort_paired_${SAMPLE} \
+      -o  ${TMP_OUT}/${SAMPLE}.paired.bam
+
+  # Align single reads 
+  local SINGLE_BAMS=()
+
+  for SFILE in S1_${SAMPLE}.fastq.gz S2_${SAMPLE}.fastq.gz; do
+    local TAG=${SFILE:0:2}
+    if [[ -f "${TMP_OUT}/${SFILE}" ]]; then
+      bwa mem \
+        -M \
+        -R "${RG}" \
+        ${INDEX_DIR}/genome \
+        ${TMP_OUT}/${SFILE} \
+      | samtools sort \
+          -T  ${TMP_OUT}/tmp_sort_${TAG}_${SAMPLE} \
+          -o  ${TMP_OUT}/${SAMPLE}.${TAG}.bam
+      SINGLE_BAMS+=("${TMP_OUT}/${SAMPLE}.${TAG}.bam")
+    fi
+  done
+
+  #Merge paired and single BAMs into one
+  if [[ ${#SINGLE_BAMS[@]} -gt 0 ]]; then
+    samtools merge \
+      -f \
+      ${TMP_OUT}/${SAMPLE}.sorted.bam \
+      ${TMP_OUT}/${SAMPLE}.paired.bam \
+      "${SINGLE_BAMS[@]}"
+
+    rm ${TMP_OUT}/${SAMPLE}.paired.bam "${SINGLE_BAMS[@]}"
+  else
+    echo "No single reads found for ${CONDITION}/${SAMPLE}, using paired only"
+    mv ${TMP_OUT}/${SAMPLE}.paired.bam ${TMP_OUT}/${SAMPLE}.sorted.bam
+  fi
+
+  #Index final merged BAM
+  samtools index ${TMP_OUT}/${SAMPLE}.sorted.bam
+
+  #Stats
+  samtools flagstat \
+    ${TMP_OUT}/${SAMPLE}.sorted.bam \
+    > ${TMP_OUT}/${SAMPLE}.flagstat.txt
+
+  samtools idxstats \
+    ${TMP_OUT}/${SAMPLE}.sorted.bam \
+    > ${TMP_OUT}/${SAMPLE}.idxstats.txt
+
+  #Clean up reads from TMP
+  rm -f \
+    ${TMP_OUT}/R1_${SAMPLE}.fastq.gz \
+    ${TMP_OUT}/R2_${SAMPLE}.fastq.gz \
+    ${TMP_OUT}/S1_${SAMPLE}.fastq.gz \
+    ${TMP_OUT}/S2_${SAMPLE}.fastq.gz
+
+  echo "Done: ${CONDITION}/${SAMPLE}"
+}
+
+echo "Gathering samples"
+
+BH_SAMPLES=($(ls ${BH_DIR}/trim_paired_*_pass_1.fastq.gz 2>/dev/null \
+  | xargs -n1 basename \
+  | sed 's/trim_paired_//;s/_pass_1\.fastq\.gz//'))
+
+SERUM_SAMPLES=($(ls ${SERUM_DIR}/trim_paired_*_pass_1.fastq.gz 2>/dev/null \
+  | xargs -n1 basename \
+  | sed 's/trim_paired_//;s/_pass_1\.fastq\.gz//'))
+
+echo "BH samples   (${#BH_SAMPLES[@]}): ${BH_SAMPLES[*]}"
+echo "Serum samples (${#SERUM_SAMPLES[@]}): ${SERUM_SAMPLES[*]}"
+
+echo "Running alignments..."
+
+for SAMPLE in "${BH_SAMPLES[@]}"; do
+  align_sample "$SAMPLE" "$BH_DIR" "BH"
+done
+
+for SAMPLE in "${SERUM_SAMPLES[@]}"; do
+  align_sample "$SAMPLE" "$SERUM_DIR" "Serum"
+done
+
+echo "Copying results..."
+
+cp out/BH/*.bam     ${OUT_DIR}/BH/   2>/dev/null || true
+cp out/BH/*.bai     ${OUT_DIR}/BH/   2>/dev/null || true
+cp out/BH/*.txt     ${OUT_DIR}/BH/   2>/dev/null || true
+cp out/Serum/*.bam  ${OUT_DIR}/Serum/ 2>/dev/null || true
+cp out/Serum/*.bai  ${OUT_DIR}/Serum/ 2>/dev/null || true
+cp out/Serum/*.txt  ${OUT_DIR}/Serum/ 2>/dev/null || true

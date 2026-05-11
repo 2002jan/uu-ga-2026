@@ -1,0 +1,28 @@
+#!/bin/bash -l
+#SBATCH -A uppmax2026-1-61
+#SBATCH -J raw_data_qc
+#SBATCH --output=logs/fastqc_raw_%j.out
+#SBATCH --error=logs/fastqc_raw_%j.err
+#SBATCH -t 20:00
+
+#Modules
+module load FastQC/0.12.1-Java-17
+
+#Dir preperation
+WORKDIR=$HOME/GenomeAnalysisProject
+
+OUT_DIR=$WORKDIR/results/raw_qc
+mkdir -p $OUT_DIR
+
+DATA=$WORKDIR/data/raw_data/genomics_data/PacBio
+
+cd $SNIC_TMP
+
+mkdir data
+mkdir out
+
+cp $DATA/* data/
+
+fastqc data/* --outdir out/
+
+cp out/* $OUT_DIR/

@@ -1,0 +1,91 @@
+#!/bin/bash -l
+#SBATCH -A uppmax2026-1-61
+#SBATCH -J snp_calling
+#SBATCH --output=logs/snp_calling_%j.out
+#SBATCH --error=logs/snp_calling_%j.err
+#SBATCH -n 1
+#SBATCH -t 2:00:00
+
+#Modules
+module load minimap2/2.30-GCCcore-13.3.0
+module load SAMtools/1.22.1-GCC-13.3.0
+module load BCFtools/1.22.1-GCC-13.3.0
+module load matplotlib/3.10.5-gfbf-2025b
+
+#Dir preperation
+WORKDIR=$HOME/GenomeAnalysisProject
+
+OUT_DIR=$WORKDIR/results/snp_calling
+mkdir -p $OUT_DIR
+
+DATA=$WORKDIR/results/asm/asm.contigs.fasta
+REFERENCE=$WORKDIR/data/reference/reference.fasta
+
+cd $SNIC_TMP
+
+mkdir data
+mkdir out
+
+cp $DATA data/
+cp $REFERENCE data/
+
+DATA=data/asm.contigs.fasta
+REFERENCE=data/reference.fasta
+PREFIX=out/sample
+
+samtools faidx $REFERENCE
+
+minimap2 \
+  -ax asm5 \
+  -t 1 \
+  --secondary=no \
+  --cs \
+  $REFERENCE \
+  $DATA \
+| samtools sort \
+    -@ 1 \
+    -o ${PREFIX}.sorted.bam
+
+samtools index -@ 1 ${PREFIX}.sorted.bam
+
+samtools flagstat ${PREFIX}.sorted.bam > out/alignment_stats.txt
+samtools coverage ${PREFIX}.sorted.bam > out/coverage_stats.txt
+
+bcftools mpileup \
+  --fasta-ref $REFERENCE \
+  --output-type u \
+  --threads 1 \
+  ${PREFIX}.sorted.bam \
+| bcftools call \
+  --multiallelic-caller \
+  --variants-only \
+  --output-type z \
+  --output ${PREFIX}.raw.vcf.gz \
+  --threads 1
+
+tabix -p vcf ${PREFIX}.raw.vcf.gz
+
+bcftools filter \
+  --include 'QUAL>=20 && DP>=10 && DP<=500 && MQ>=30' \
+  --soft-filter LowQual \
+  --output-type z \
+  --output ${PREFIX}.filtered.vcf.gz \
+  ${PREFIX}.raw.vcf.gz
+
+tabix -p vcf ${PREFIX}.filtered.vcf.gz
+
+bcftools view --type snps  -O z -o ${PREFIX}.snps.vcf.gz  ${PREFIX}.filtered.vcf.gz
+bcftools view --type indels -O z -o ${PREFIX}.indels.vcf.gz ${PREFIX}.filtered.vcf.gz
+tabix -p vcf ${PREFIX}.snps.vcf.gz
+tabix -p vcf ${PREFIX}.indels.vcf.gz
+
+bcftools stats \
+  --fasta-ref $REFERENCE \
+  ${PREFIX}.filtered.vcf.gz \
+  > out/vcf_stats.txt
+
+bcftools stats ${PREFIX}.snps.vcf.gz | grep "Ts/Tv"
+
+cd out
+
+cp -r * $OUT_DIR/

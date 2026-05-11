@@ -1,0 +1,34 @@
+#!/bin/bash -l
+#SBATCH -A uppmax2026-1-61
+#SBATCH -J canu_asm
+#SBATCH --output=logs/canu_asm%j.out
+#SBATCH --error=logs/canu_asm%j.err
+#SBATCH -n 4
+#SBATCH -t 3:00:00
+
+#Modules
+module load canu/2.3-GCCcore-13.3.0-Java-17
+module load SAMtools/1.22.1-GCC-13.3.0
+
+#Dir preperation
+WORKDIR=$HOME/GenomeAnalysisProject
+
+OUT_DIR=$WORKDIR/results/asm
+mkdir -p $OUT_DIR
+
+DATA=$WORKDIR/data/raw_data/genomics_data/PacBio
+
+cd $SNIC_TMP
+
+mkdir data
+mkdir out
+
+cp $DATA/* data/
+
+canu -p asm \
+    -d out \
+    genomeSize=4.5m \
+    -pacbio-raw data/*.fastq.gz \
+    useGrid=false maxThreads=4
+
+cp out/* $OUT_DIR/

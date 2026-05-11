@@ -1,0 +1,43 @@
+#!/bin/bash -l
+#SBATCH -A uppmax2026-1-61
+#SBATCH -J prokka_anot
+#SBATCH --output=logs/prokka_anot%j.out
+#SBATCH --error=logs/prokka_anot%j.err
+#SBATCH -n 1
+#SBATCH -t 15:00
+
+#Modules
+module load prokka/1.14.5-gompi-2024a
+module load barrnap/0.9-gompi-2024a
+
+#Dir preperation
+WORKDIR=$HOME/GenomeAnalysisProject
+
+OUT_DIR=$WORKDIR/results/prokka_annotation
+mkdir -p $OUT_DIR
+
+DATA=$WORKDIR/results/asm/asm.contigs.fasta
+
+cd $SNIC_TMP
+
+mkdir data
+mkdir out
+
+cp $DATA data/
+
+DATA=data/asm.contigs.fasta
+PREFIX=out/sample
+
+prokka \
+  $DATA \
+  --outdir out \
+  --prefix EnterococcusFaecium \
+  --cpus 1 \
+  --mincontiglen 500 \
+  --compliant \
+  --addgenes \
+  --force
+
+cd out
+
+cp -r * $OUT_DIR/
