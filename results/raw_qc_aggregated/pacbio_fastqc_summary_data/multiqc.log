@@ -1,0 +1,4 @@
+[2026-05-16 08:08:08,319] multiqc.core.version_check                         [WARNING]  MultiQC Version v1.34 now available!
+[2026-05-16 08:08:08,319] multiqc.core.file_search                           [INFO   ]  Search path: /home/jindrzej/GenomeAnalysisProject/results/raw_qc
+[2026-05-16 08:08:08,583] multiqc.modules.fastqc.fastqc                      [INFO   ]  Found 6 reports
+[2026-05-16 08:08:11,722] multiqc.plots.violin                               [WARNING]  Tried to make table/violin plot, but had no data. pconfig: {'namespace': 'FastQC', 'id': 'fastqc_top_overrepresented_sequences_table', 'title': 'FastQC: Top overrepresented sequences', 'col1_header': 'Overrepresented sequence', 'sort_rows': False}
