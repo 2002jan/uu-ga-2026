@@ -80,18 +80,6 @@ count_sample() {
     ${TMP_OUT}/${SAMPLE}.single.bam \
     data/annotation.gff
 
-  paste \
-    ${TMP_OUT}/${SAMPLE}.counts_paired.tsv \
-    ${TMP_OUT}/${SAMPLE}.counts_single.tsv \
-  | awk 'BEGIN{OFS="\t"} {
-      if ($1 != $3) {
-        print "ERROR: gene ID mismatch at line "NR": "$1" vs "$3 > "/dev/stderr"
-        exit 1
-      }
-      print $1, $2+$4
-    }' \
-  > ${TMP_OUT}/${SAMPLE}.counts.tsv
-
   rm -f \
     ${TMP_OUT}/${SAMPLE}.sorted.bam \
     ${TMP_OUT}/${SAMPLE}.sorted.bam.bai \
@@ -122,44 +110,5 @@ for SAMPLE in "${SERUM_SAMPLES[@]}"; do
     count_sample "$SAMPLE" "Serum";
 done
 
-MATRIX=out/count_matrix.tsv
-
-ALL_COUNT_FILES=()
-ALL_HEADERS=("GeneID")
-
-for SAMPLE in "${BH_SAMPLES[@]}"; do
-  ALL_COUNT_FILES+=("out/BH/${SAMPLE}.counts.tsv")
-  ALL_HEADERS+=("BH_${SAMPLE}")
-done
-
-for SAMPLE in "${SERUM_SAMPLES[@]}"; do
-  ALL_COUNT_FILES+=("out/Serum/${SAMPLE}.counts.tsv")
-  ALL_HEADERS+=("Serum_${SAMPLE}")
-done
-
-echo -e "$(IFS=$'\t'; echo "${ALL_HEADERS[*]}")" > ${MATRIX}
-
-paste "${ALL_COUNT_FILES[@]}" \
-  | awk 'BEGIN{OFS="\t"} !/^__/ {
-      printf $1;
-      for (i=2; i<=NF; i+=2) printf "\t"$i;   # keep only count col, skip duplicate ID cols
-      printf "\n"
-    }' \
-  >> ${MATRIX}
-
-SUMMARY=out/htseq_summary.tsv
-echo -e "Metric\t$(IFS=$'\t'; echo "${ALL_HEADERS[@]:1}")" > ${SUMMARY}
-
-for METRIC in __no_feature __ambiguous __too_low_aQual __not_aligned __alignment_not_unique; do
-  ROW="$METRIC"
-  for FILE in "${ALL_COUNT_FILES[@]}"; do
-    VAL=$(grep "^${METRIC}" ${FILE} | awk '{print $2}')
-    ROW="${ROW}\t${VAL:-0}"
-  done
-  echo -e "$ROW" >> ${SUMMARY}
-done
-
 cp out/BH/*.tsv ${OUT_DIR}/BH/
 cp out/Serum/*.tsv ${OUT_DIR}/Serum/
-cp ${MATRIX} ${OUT_DIR}/count_matrix.tsv
-cp ${SUMMARY} ${OUT_DIR}/htseq_summary.tsv
