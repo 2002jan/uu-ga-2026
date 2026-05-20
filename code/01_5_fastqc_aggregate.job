@@ -1,0 +1,18 @@
+#!/bin/bash -l
+#SBATCH -A uppmax2026-1-61
+#SBATCH -J qc_aggragation
+#SBATCH --output=logs/multiqc_%j.out
+#SBATCH --error=logs/multiqc_%j.err
+#SBATCH -t 5:00
+
+module load MultiQC/1.28-foss-2024a
+
+WORKDIR=$HOME/GenomeAnalysisProject
+
+DATA_DIR=$WORKDIR/results/raw_qc/
+OUT_DIR=$WORKDIR/results/raw_qc_aggregated/
+
+multiqc $DATA_DIR \
+    --outdir $OUT_DIR \
+    --filename pacbio_fastqc_summary.html \
+    --force

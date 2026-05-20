@@ -16,7 +16,7 @@ WORKDIR=$HOME/GenomeAnalysisProject
 OUT_DIR=$WORKDIR/results/rna_seq_alignment
 mkdir -p ${OUT_DIR}/{BH,Serum}
 
-ASSEMBLY=$WORKDIR/results/asm/asm.contigs.fasta
+ASSEMBLY=$WORKDIR/results/prokka_annotation/EnterococcusFaecium.fna
 BH_DIR=$WORKDIR/data/raw_data/transcriptomics_data/RNA-Seq_BH/trimmed
 SERUM_DIR=$WORKDIR/data/raw_data/transcriptomics_data/RNA-Seq_Serum/trimmed
 
