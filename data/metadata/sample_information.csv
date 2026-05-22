@@ -1,0 +1,13 @@
+id,sample_name,data_type,sequencing_platform,read_type,condition,notes
+ERR1797969,Serum_rep1,RNA-seq,Illumina,paired-end,Serum,Transcriptomics replicate 1 for Serum condition
+ERR1797970,Serum_rep2,RNA-seq,Illumina,paired-end,Serum,Transcriptomics replicate 2 for Serum condition
+ERR1797971,Serum_rep3,RNA-seq,Illumina,paired-end,Serum,Transcriptomics replicate 3 for Serum condition
+ERR1797972,BH_rep1,RNA-seq,Illumina,paired-end,BH,Transcriptomics replicate 1 for Brain Heart Infusion (BH) condition
+ERR1797973,BH_rep2,RNA-seq,Illumina,paired-end,BH,Transcriptomics replicate 2 for Brain Heart Infusion (BH) condition
+ERR1797974,BH_rep3,RNA-seq,Illumina,paired-end,BH,Transcriptomics replicate 3 for Brain Heart Infusion (BH) condition
+m131023_233432_42174_c100519312550000001823081209281335_s1_X0.1,Genome_assembly_reads_part1,WGS,PacBio,single-end,-,Long-read data partition 1 used for Canu assembly
+m131024_200535_42174_c100563672550000001823084212221342_s1_p0.1,Genome_assembly_reads_part2,WGS,PacBio,single-end,-,Long-read data partition 2 used for Canu assembly
+m131023_233432_42174_c100519312550000001823081209281335_s1_X0.2,Genome_assembly_reads_part3,WGS,PacBio,single-end,-,Long-read data partition 3 used for Canu assembly
+m131024_200535_42174_c100563672550000001823084212221342_s1_p0.2,Genome_assembly_reads_part4,WGS,PacBio,single-end,-,Long-read data partition 4 used for Canu assembly
+m131023_233432_42174_c100519312550000001823081209281335_s1_X0.3,Genome_assembly_reads_part5,WGS,PacBio,single-end,-,Long-read data partition 5 used for Canu assembly
+m131024_200535_42174_c100563672550000001823084212221342_s1_p0.3,Genome_assembly_reads_part6,WGS,PacBio,single-end,-,Long-read data partition 6 used for Canu assembly
