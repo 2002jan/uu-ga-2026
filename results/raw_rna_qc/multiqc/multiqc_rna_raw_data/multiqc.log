@@ -1,0 +1,4 @@
+[2026-08-23 00:53:27,640] multiqc.core.update_config                         [INFO   ]  Report title: Pre-trimming RNA QC
+[2026-08-23 00:53:27,831] multiqc.core.version_check                         [WARNING]  MultiQC Version v1.35 now available!
+[2026-08-23 00:53:27,831] multiqc.core.file_search                           [INFO   ]  Search path: /scratch/out
+[2026-08-23 00:53:28,292] multiqc.modules.fastqc.fastqc                      [INFO   ]  Found 12 reports

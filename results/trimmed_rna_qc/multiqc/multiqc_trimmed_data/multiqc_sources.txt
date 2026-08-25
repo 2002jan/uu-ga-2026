@@ -1,0 +1,13 @@
+Module	Section	Sample Name	Source
+FastQC	all_sections	ERR1797971_1_paired	/home/janek/UUMasters/sem2/ga/results/trimmed_rna_qc/trimmed/ERR1797971_1_paired_fastqc.zip
+FastQC	all_sections	ERR1797974_1_paired	/home/janek/UUMasters/sem2/ga/results/trimmed_rna_qc/trimmed/ERR1797974_1_paired_fastqc.zip
+FastQC	all_sections	ERR1797969_2_paired	/home/janek/UUMasters/sem2/ga/results/trimmed_rna_qc/trimmed/ERR1797969_2_paired_fastqc.zip
+FastQC	all_sections	ERR1797971_2_paired	/home/janek/UUMasters/sem2/ga/results/trimmed_rna_qc/trimmed/ERR1797971_2_paired_fastqc.zip
+FastQC	all_sections	ERR1797973_1_paired	/home/janek/UUMasters/sem2/ga/results/trimmed_rna_qc/trimmed/ERR1797973_1_paired_fastqc.zip
+FastQC	all_sections	ERR1797972_1_paired	/home/janek/UUMasters/sem2/ga/results/trimmed_rna_qc/trimmed/ERR1797972_1_paired_fastqc.zip
+FastQC	all_sections	ERR1797973_2_paired	/home/janek/UUMasters/sem2/ga/results/trimmed_rna_qc/trimmed/ERR1797973_2_paired_fastqc.zip
+FastQC	all_sections	ERR1797972_2_paired	/home/janek/UUMasters/sem2/ga/results/trimmed_rna_qc/trimmed/ERR1797972_2_paired_fastqc.zip
+FastQC	all_sections	ERR1797974_2_paired	/home/janek/UUMasters/sem2/ga/results/trimmed_rna_qc/trimmed/ERR1797974_2_paired_fastqc.zip
+FastQC	all_sections	ERR1797969_1_paired	/home/janek/UUMasters/sem2/ga/results/trimmed_rna_qc/trimmed/ERR1797969_1_paired_fastqc.zip
+FastQC	all_sections	ERR1797970_2_paired	/home/janek/UUMasters/sem2/ga/results/trimmed_rna_qc/trimmed/ERR1797970_2_paired_fastqc.zip
+FastQC	all_sections	ERR1797970_1_paired	/home/janek/UUMasters/sem2/ga/results/trimmed_rna_qc/trimmed/ERR1797970_1_paired_fastqc.zip

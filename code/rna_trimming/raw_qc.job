@@ -1,0 +1,56 @@
+#!/bin/bash -l
+#SBATCH -A uppmax2026-1-61
+#SBATCH -J raw_rna_qc
+#SBATCH --output=logs/fastqc_rna_raw_%j.out
+#SBATCH --error=logs/fastqc_rna_raw_%j.err
+#SBATCH -t 40:00
+
+#Modules
+module load FastQC/0.12.1-Java-17
+module load MultiQC/1.28-gfbf-2024a
+
+#Config
+declare -A SAMPLES
+SAMPLES[BH]="ERR1797972 ERR1797973 ERR1797974"
+SAMPLES[Serum]="ERR1797969 ERR1797970 ERR1797971"
+CONDITIONS="BH Serum"
+
+#Dir preperation
+WORKDIR=$HOME/GenomeAnalysisProject
+
+OUT_DIR=$WORKDIR/results/raw_rna_qc
+mkdir -p $OUT_DIR
+
+DATA=$WORKDIR/data/raw_data/transcriptomics_data
+
+cd $SNIC_TMP
+
+mkdir data
+mkdir out
+
+for condition in $CONDITIONS; do
+    for sample in ${SAMPLES[$condition]}; do
+        r1="${DATA}/RNA-Seq_${condition}/raw/${sample}_1.fastq.gz"
+        r2="${DATA}/RNA-Seq_${condition}/raw/${sample}_2.fastq.gz"
+        cp "$r1" "data/${sample}_1.fastq.gz"
+        cp "$r2" "data/${sample}_2.fastq.gz"
+
+        r1="data/${sample}_1.fastq.gz"
+        r2="data/${sample}_2.fastq.gz"
+
+        echo "Running ${sample} (${condition})"
+        fastqc --outdir out/ "$r1" "$r2"
+
+        rm "$r1"
+        rm "$r2"
+        
+    done
+done
+
+multiqc out/ \
+        --title "Pre-trimming RNA QC" \
+        --filename "multiqc_rna_raw" \
+        --outdir "out/multiqc"
+
+
+cp -r out/* $OUT_DIR/

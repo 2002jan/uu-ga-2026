@@ -1,0 +1,4 @@
+[2026-08-25 16:20:00,834] multiqc.core.update_config                         [INFO   ]  Report title: Post trimming QC
+[2026-08-25 16:20:01,303] multiqc.core.version_check                         [WARNING]  MultiQC Version v1.35 now available!
+[2026-08-25 16:20:01,304] multiqc.core.file_search                           [INFO   ]  Search path: /home/janek/UUMasters/sem2/ga/results/trimmed_rna_qc/trimmed
+[2026-08-25 16:20:01,546] multiqc.modules.fastqc.fastqc                      [INFO   ]  Found 12 reports

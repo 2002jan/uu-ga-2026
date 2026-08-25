@@ -1,0 +1,67 @@
+#!/bin/bash -l
+#SBATCH -A uppmax2026-1-61
+#SBATCH -J rna_trimming
+#SBATCH --output=logs/rna_trimming_%j.out
+#SBATCH --error=logs/rna_trimming_%j.err
+#SBATCH -t 12:00:00
+
+#Modules
+module load Trimmomatic/0.39-Java-17
+
+#Helper functions
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') $*"
+}
+
+#Config
+declare -A SAMPLES
+SAMPLES[BH]="ERR1797972 ERR1797973 ERR1797974"
+SAMPLES[Serum]="ERR1797969 ERR1797970 ERR1797971"
+CONDITIONS="BH Serum"
+
+#Dir preperation
+WORKDIR=$HOME/GenomeAnalysisProject
+
+OUT_DIR=$WORKDIR/results/rna_trimming
+mkdir -p $OUT_DIR
+
+DATA=$WORKDIR/data/raw_data/transcriptomics_data
+ADAPTERS="/sw/bioinfo/trimmomatic/0.39/rackham/adapters/TruSeq3-PE.fa"
+
+cd $SNIC_TMP
+
+mkdir data
+mkdir out
+
+for condition in $CONDITIONS; do
+    log "Processing $condition"
+    TRIM_OUT="out/RNA-Seq_${condition}/trimmed"
+    mkdir -p "$TRIM_OUT"
+
+    for sample in ${SAMPLES[$condition]}; do
+        r1="${DATA}/RNA-Seq_${condition}/raw/${sample}_1.fastq.gz"
+        r2="${DATA}/RNA-Seq_${condition}/raw/${sample}_2.fastq.gz"
+        cp "$r1" "data/${sample}_1.fastq.gz"
+        cp "$r2" "data/${sample}_2.fastq.gz"
+
+        r1="data/${sample}_1.fastq.gz"
+        r2="data/${sample}_2.fastq.gz"
+
+        log "Running ${sample} (${condition})"
+        trimmomatic PE -threads 1 \
+            "$r1" "$r2" \
+            "${TRIM_OUT}/${sample}_1_paired.fastq.gz"   "${TRIM_OUT}/${sample}_1_single.fastq.gz" \
+            "${TRIM_OUT}/${sample}_2_paired.fastq.gz"   "${TRIM_OUT}/${sample}_2_single.fastq.gz" \
+            ILLUMINACLIP:"${ADAPTERS}":2:30:10 \
+            LEADING:3 \
+            TRAILING:3 \
+            SLIDINGWINDOW:4:15 \
+            MINLEN:36
+
+        rm "$r1"
+        rm "$r2"
+        
+    done
+done
+
+cp -r out/* $OUT_DIR/

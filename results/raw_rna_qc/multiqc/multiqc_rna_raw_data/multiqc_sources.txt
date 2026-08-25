@@ -1,0 +1,13 @@
+Module	Section	Sample Name	Source
+FastQC	all_sections	ERR1797973_1	/scratch/out/ERR1797973_1_fastqc.zip
+FastQC	all_sections	ERR1797974_1	/scratch/out/ERR1797974_1_fastqc.zip
+FastQC	all_sections	ERR1797969_2	/scratch/out/ERR1797969_2_fastqc.zip
+FastQC	all_sections	ERR1797970_1	/scratch/out/ERR1797970_1_fastqc.zip
+FastQC	all_sections	ERR1797974_2	/scratch/out/ERR1797974_2_fastqc.zip
+FastQC	all_sections	ERR1797971_1	/scratch/out/ERR1797971_1_fastqc.zip
+FastQC	all_sections	ERR1797973_2	/scratch/out/ERR1797973_2_fastqc.zip
+FastQC	all_sections	ERR1797972_1	/scratch/out/ERR1797972_1_fastqc.zip
+FastQC	all_sections	ERR1797971_2	/scratch/out/ERR1797971_2_fastqc.zip
+FastQC	all_sections	ERR1797972_2	/scratch/out/ERR1797972_2_fastqc.zip
+FastQC	all_sections	ERR1797969_1	/scratch/out/ERR1797969_1_fastqc.zip
+FastQC	all_sections	ERR1797970_2	/scratch/out/ERR1797970_2_fastqc.zip

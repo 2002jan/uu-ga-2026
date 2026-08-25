@@ -1,0 +1,77 @@
+#!/bin/bash -l
+#SBATCH -A uppmax2026-1-61
+#SBATCH -J trimmed_rna_qc
+#SBATCH --output=logs/fastqc_rna_trimmed_%j.out
+#SBATCH --error=logs/fastqc_rna_trimmed_%j.err
+#SBATCH -t 2:00:00
+
+#Modules
+module load FastQC/0.12.1-Java-17
+module load MultiQC/1.28-gfbf-2024a
+
+#Helper functions
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') $*"
+}
+
+#Config
+declare -A SAMPLES
+SAMPLES[BH]="ERR1797972 ERR1797973 ERR1797974"
+SAMPLES[Serum]="ERR1797969 ERR1797970 ERR1797971"
+CONDITIONS="BH Serum"
+
+#Dir preperation
+WORKDIR=$HOME/GenomeAnalysisProject
+
+OUT_DIR=$WORKDIR/results/trimmed_rna_qc
+mkdir -p $OUT_DIR
+
+DATA_TRIMMED=$WORKDIR/results/rna_trimming
+DATA_PRE_TRIMMED=$WORKDIR/data/raw_data/transcriptomics_data
+
+cd $SNIC_TMP
+
+mkdir data
+mkdir -p out/{trimmed,pre_trimmed}
+
+log "Running fastqc"
+for condition in $CONDITIONS; do
+    for sample in ${SAMPLES[$condition]}; do
+        r1="${DATA_TRIMMED}/RNA-Seq_${condition}/trimmed/${sample}_1_paired.fastq.gz"
+        r2="${DATA_TRIMMED}/RNA-Seq_${condition}/trimmed/${sample}_2_paired.fastq.gz"
+        cp "$r1" "data/${sample}_1_paired.fastq.gz"
+        cp "$r2" "data/${sample}_2_paired.fastq.gz"
+
+        r1="data/${sample}_1_paired.fastq.gz"
+        r2="data/${sample}_2_paired.fastq.gz"
+
+        echo "Running ${sample} trimmed (${condition})"
+        fastqc --outdir out/trimmed/ "$r1" "$r2"
+
+        rm "$r1"
+        rm "$r2"
+
+        r1="${DATA_PRE_TRIMMED}/RNA-Seq_${condition}/trimmed/trim_paired_${sample}_pass_1.fastq.gz"
+        r2="${DATA_PRE_TRIMMED}/RNA-Seq_${condition}/trimmed/trim_paired_${sample}_pass_2.fastq.gz"
+        cp "$r1" "data/pre_${sample}_1_paired.fastq.gz"
+        cp "$r2" "data/pre_${sample}_2_paired.fastq.gz"
+
+        r1="data/pre_${sample}_1_paired.fastq.gz"
+        r2="data/pre_${sample}_2_paired.fastq.gz"
+
+        echo "Running ${sample} pre-trimmed (${condition})"
+        fastqc --outdir out/pre_trimmed "$r1" "$r2"
+
+        rm "$r1"
+        rm "$r2"
+        
+    done
+done
+
+multiqc out/trimmed/ out/pre_trimmed/ \
+        --title "Post-trimming QC - own vs provided trimmed reads" \
+        --filename "multiqc_trimmed_comparison" \
+        --outdir "out/multiqc"
+
+
+cp -r out/* $OUT_DIR/
